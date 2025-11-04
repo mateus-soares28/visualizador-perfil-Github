@@ -1,43 +1,25 @@
-const inputSearch = document.getElementById('input-search');
-const btnSearch = document.getElementById('btn-search');
-const profileResults = document.querySelector('.profile-results');
+import { elements } from './modules/elements.js';
+import { getUserData } from './modules/githubService.js';
+import { renderProfile, renderLoading, clearProfile } from './modules/renderer.js';
 
-const BASE_URL = 'https://api.github.com'
+const { inputSearch, btnSearch, profileResults } = elements;
 
 btnSearch.addEventListener('click', async () => {
     const userName = inputSearch.value;
 
-    if (userName) {
-        profileResults.innerHTML = `<p class="loading">Carregando...</p>`;
+    if (!userName) {
+        alert('Por favor, digite um nome de usuário do GitHub.');
+        return;
+    }
 
-        try {
+    profileResults.innerHTML = renderLoading();
 
-            const response = await fetch(`${BASE_URL}/users/${userName}`);
-
-            if (!response.ok) {
-                alert('usuário não encontrado. Por favor, verifique o nome de usuário de tente novamente. ')
-                profileResults.innerHTML = "";
-                return
-            };
-
-            const userData = await response.json();
-            console.log(userData);
-
-            profileResults.innerHTML = `
-            <div class="profile-card">
-                <img src="${userData.avatar_url}" alt="Avatar de ${userData.name}" class="profile-avatar">
-                <div class="profile-info">
-                  <h2>${userData.name}</h2>
-                  <p>${userData.bio || 'Não possui bio cadastrada 😢'}</p>
-                </div>
-            </div>`
-
-        } catch (error) {
-            console.error('Erro ao buscar perfil do usuário:', error);
-            alert('Ocorreu um erro ao buscar o perfil do usuário. Por favor, tente novamente mais tarde. ')
-        }
-
-    } else {
-        alert('Por favor, digite um nome de usuário do GitHub.')
+    try {
+        const userData = await getUserData(userName);
+        profileResults.innerHTML = renderProfile(userData);
+    } catch (error) {
+        console.error('Erro ao buscar perfil do usuário:', error);
+        alert('Ocorreu um erro ao buscar o perfil do usuário. Por favor, tente novamente mais tarde.');
+        clearProfile(profileResults);
     }
 });
